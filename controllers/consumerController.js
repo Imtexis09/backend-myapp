@@ -77,32 +77,38 @@ exports.reportIncident = (req, res) => {
 
 // 4. Obtener el historial de reportes hechos por el usuario autenticado
 exports.getUserReportsHistory = (req, res) => {
-    // El ID del usuario viene del token decodificado en el middleware verifyToken
     const userId = req.userId; 
 
     if (!userId) {
         return res.status(401).json({ error: 'Usuario no autenticado o token inválido' });
     }
 
-    // Consulta con INNER JOIN para traer los datos del reporte junto con el nombre del negocio
+    // Cambiamos i.reported_at por i.created_at si es que así se llama en tu base de datos.
+    // Si estás seguro de que es reported_at, puedes dejarlo, pero usualmente en Express usamos created_at.
     const query = `
         SELECT 
             i.id AS incident_id,
             i.category,
             i.description,
             i.status,
-            i.reported_at,
+            i.created_at,
             b.name AS business_name,
             b.address AS business_address
         FROM incidents i
         INNER JOIN businesses b ON i.business_id = b.id
         WHERE i.reported_by = ?
-        ORDER BY i.reported_at DESC
+        ORDER BY i.created_at DESC
     `;
 
     db.all(query, [userId], (err, rows) => {
         if (err) {
-            return res.status(500).json({ error: 'Error al obtener el historial de reportes' });
+            // Imprime el error real en los Logs de Railway para saber exactamente qué columna falló
+            console.error("❌ Error en la consulta SQL de historial:", err.message);
+            
+            return res.status(500).json({ 
+                error: 'Error al obtener el historial de reportes',
+                detalle: err.message // Esto le dirá al Frontend qué columna no encontró
+            });
         }
 
         res.json({
