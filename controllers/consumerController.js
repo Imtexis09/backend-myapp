@@ -74,3 +74,21 @@ exports.reportIncident = (req, res) => {
         }
     });
 };
+
+// 4. Obtener historial de reportes del usuario autenticado
+exports.getMyReports = (req, res) => {
+    const userId = req.userId;
+
+    db.all(
+        `SELECT i.*, b.name as business_name
+         FROM incidents i
+         LEFT JOIN businesses b ON i.business_id = b.id
+         WHERE i.reported_by = ?
+         ORDER BY i.reported_at DESC`,
+        [userId],
+        (err, rows) => {
+            if (err) return res.status(500).json({ error: 'Error al obtener el historial' });
+            res.json({ reports: rows || [] });
+        }
+    );
+};
