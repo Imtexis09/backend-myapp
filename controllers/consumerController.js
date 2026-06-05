@@ -75,20 +75,39 @@ exports.reportIncident = (req, res) => {
     });
 };
 
-// 4. Obtener historial de reportes del usuario autenticado
-exports.getMyReports = (req, res) => {
-    const userId = req.userId;
+// 4. Obtener el historial de reportes hechos por el usuario autenticado
+exports.getUserReportsHistory = (req, res) => {
+    // El ID del usuario viene del token decodificado en el middleware verifyToken
+    const userId = req.userId; 
 
-    db.all(
-        `SELECT i.*, b.name as business_name
-         FROM incidents i
-         LEFT JOIN businesses b ON i.business_id = b.id
-         WHERE i.reported_by = ?
-         ORDER BY i.reported_at DESC`,
-        [userId],
-        (err, rows) => {
-            if (err) return res.status(500).json({ error: 'Error al obtener el historial' });
-            res.json({ reports: rows || [] });
+    if (!userId) {
+        return res.status(401).json({ error: 'Usuario no autenticado o token inválido' });
+    }
+
+    // Consulta con INNER JOIN para traer los datos del reporte junto con el nombre del negocio
+    const query = `
+        SELECT 
+            i.id AS incident_id,
+            i.category,
+            i.description,
+            i.status,
+            i.reported_at,
+            b.name AS business_name,
+            b.address AS business_address
+        FROM incidents i
+        INNER JOIN businesses b ON i.business_id = b.id
+        WHERE i.reported_by = ?
+        ORDER BY i.reported_at DESC
+    `;
+
+    db.all(query, [userId], (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: 'Error al obtener el historial de reportes' });
         }
-    );
+
+        res.json({
+            total_reportes: rows.length,
+            reportes: rows
+        });
+    });
 };

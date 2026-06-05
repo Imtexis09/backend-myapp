@@ -15,8 +15,6 @@ router.post('/business/:id/report', (req, res, next) => {
     }
     next();
 }, consumerController.reportIncident);
-
-// Historial de reportes del usuario autenticado
-router.get('/reports', verifyToken, consumerController.getMyReports);
-
+// 🔐 RUTA NUEVA: Historial de reportes creados por el consumidor autenticado
+router.get('/reports/history', verifyToken, consumerController.getUserReportsHistory);
 module.exports = router;
