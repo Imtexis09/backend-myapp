@@ -1,90 +1,98 @@
 # SafeScore QR - Backend API 🚀
 
-Este repositorio contiene el sistema backend para **SafeScore QR**, una plataforma de monitoreo de cumplimiento higiénico comercial basado en la normativa **NOM-251**. El sistema permite a los comerciantes evaluar sus establecimientos, generar códigos QR de estado y faculta a los ciudadanos para consultar el histórico de higiene y reportar incidencias en tiempo real.
+This repository houses the backend system for **SafeScore QR**, a commercial hygienic compliance monitoring platform aligned with Mexico's official standard, **NOM-251**. The system enables business merchants to perform health self-assessments, generates real-time status QR codes, and empowers citizens to view hygiene track records and report sanitary violations in real-time.
 
-El proyecto está diseñado bajo una arquitectura REST, construido con **Node.js** y **Express**, y desplegado en la nube utilizando **Railway** con persistencia de datos en **SQLite**.
-
----
-
-## 🛠️ Tecnologías Utilizadas
-
-* **Entorno de Ejecución:** Node.js (v22+)
-* **Framework Web:** Express.js
-* **Base de Datos:** SQLite3 (Configurado con volumen persistente en la nube)
-* **Autenticación:** JSON Web Tokens (JWT) & Bcrypt
-* **Automatización:** Cron Jobs independientes (ejecución cada 15 minutos)
-* **Despliegue:** Railway CLI & GitHub Actions
+The project is designed under a **RESTful architecture**, built using **Node.js** and **Express**, and deployed to the cloud via **Railway** with persistent data storage utilizing **SQLite**.
 
 ---
 
-## 🎯 Características Principales
+## 🛠️ Tech Stack
 
-1.  **Autenticación y Seguridad (RBAC):** Control de acceso basado en roles (Comerciante / Consumidor) cifrado con tokens JWT.
-2.  **Evaluación NOM-251:** Motor de reglas que califica el cuestionario del establecimiento y genera un **Score de Higiene** inicial.
-3.  **Generación y Escaneo de QR:** Flujo optimizado para parsear URLs dinámicas de códigos QR y retornar instantáneamente el perfil del negocio al frontend móvil.
-4.  **Reportes Ciudadanos en Cascada:** Al recibir una denuncia, el backend recalculó de forma síncrona el Score e intercepta si corresponde un cambio a Alerta Naranja.
-5.  **Cron Jobs de Auditoría:** Tareas programadas en la nube que despiertan cada 15 minutos para degradar y auditar la vigencia de las alertas de forma autónoma.
+* **Runtime Environment:** Node.js (v22+)
+* **Web Framework:** Express.js
+* **Database:** SQLite3 (Configured with cloud-native persistent storage volumes)
+* **Authentication & Security:** JSON Web Tokens (JWT) & Bcrypt hashing
+* **Automation:** Independent Cloud Cron Jobs (scheduled to execute every 15 minutes)
+* **Deployment & CI/CD:** Railway CLI & GitHub Actions
 
 ---
 
-## 🗺️ Arquitectura de Endpoints (API de Consumo)
+## 🎯 Key Features
 
-### Rutas del Consumidor (`/api`)
+1. **Authentication & Security (RBAC):** Secure Role-Based Access Control (Merchant / Consumer roles) encrypted and managed via stateless JWT tokens.
+2. **NOM-251 Evaluation Engine:** A backend rules engine that processes establishment questionnaires, evaluates compliance metrics, and scores initial Hygiene Scores.
+3. **QR Generation & Dynamic Parsing:** Optimized workflow designed to parse dynamic QR code URLs and instantly stream business metadata to the mobile frontend.
+4. **Cascading Citizen Reporting System:** Upon receiving a public health complaint, the backend synchronously recalculates the establishment's Hygiene Score and instantly intercepts status transitions, triggering an immediate shift to an "Orange Alert" state if necessary.
+5. **Automated Audit Cron Jobs:** Cloud-scheduled tasks that awaken every 15 minutes to autonomously degrade scores, audit alert validity times, and update the live status matrix without human intervention.
 
-| Método | Endpoint | Descripción | Autenticación |
+---
+
+## 🗺️ API Endpoint Architecture
+
+### Consumer Routes (`/api`)
+
+| Method | Endpoint | Description | Authentication |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/scan` | Procesa el string del QR escaneado y extrae el ID del negocio. | Pública |
-| `GET` | `/api/business/:id` | Obtiene el perfil del negocio, estatus de alerta e historial de incidentes. | Pública |
-| `POST` | `/api/business/:id/report` | Registra una denuncia o anomalía higiénica (Permite modo anónimo). | Opcional |
-| `GET` | `/api/reports/history` | Obtiene el historial de reportes realizados por el cliente autenticado. | **Requerida (JWT)** |
+| `POST` | `/api/scan` | Processes the scanned QR string data and extracts the Business ID. | Public |
+| `GET` | `/api/business/:id` | Fetches the business profile, alert status, and incident logs. | Public |
+| `POST` | `/api/business/:id/report` | Submits a health violation report (Supports anonymous submission). | Optional |
+| `GET` | `/api/reports/history` | Retrieves the entire history of reports submitted by the authenticated client. | **Required (JWT)** |
 
 ---
 
-## 🚀 Instalación y Configuración Local
+## 🚀 Local Installation & Configuration
 
-Sigue estos pasos para clonar y ejecutar el servidor en tu entorno de desarrollo local:
+Follow these steps to clone and run the server locally within your development environment:
 
-### 1. Clonar el repositorio
+### 1. Clone the Repository
+```bash
+git clone [https://github.com/Imtexis09/SafeScoreQR-Backend.git](https://github.com/Imtexis09/SafeScoreQR-Backend.git)
+cd SafeScoreQR-Backend
+```
 
-`git clone [https://github.com/tu-usuario/tu-repositorio-backend.git](https://github.com/tu-usuario/tu-repositorio-backend.git)
-cd tu-repositorio-backend`
+### 2. Install Dependencies
+```bash
+npm install
+```
 
-### 2. Instalar dependencias
+### 3. Configure Environment Variables
+Create a `.env` file in the root directory of the project and define the following variables:
+```env
+PORT=3000
+JWT_SECRET=your_super_secure_secret_passphrase
+NODE_ENV=development
+```
 
-`npm install`
+### 4. Run the Local Server
+The server will boot up at `http://localhost:3000` with automated hot-reloading enabled via nodemon:
+```bash
+npm run dev
+```
 
-### 3. Configurar variables de entorno
-Crea un archivo .env en la raiz del proyecto y define las siguientes variables:
+---
 
-`PORT=3000
-JWT_SECRET=tu_palabra_secreta_super_segura
-NODE_ENV=development`
+## ☁️ Production Deployment (Railway)
 
-### 4. Levantar el servidor Local
-El servidor iniciará en http://localhost:3000 con recarga automática mediante nodemon.
-`npm run dev`
+This backend is pre-configured for a seamless deployment on Railway. Due to the architecture of running SQLite on Linux containerized instances, the `package.json` includes custom automated native compilation scripts:
 
-
-### 5. ☁️ Despliegue en Producción (Railway)
-Este backend está listo para ser desplegado en Railway. Debido al uso de SQLite en entornos Linux basados en contenedores, el archivo package.json incluye scripts automatizados de compilación nativa:
-`"scripts": {
+```json
+"scripts": {
   "start": "node index.js",
   "dev": "nodemon index.js",
   "install": "npm rebuild sqlite3 --build-from-source"
-}`
+}
+```
 
-## 🚀 Pasos para actualizar producción:
+### Steps to Update Production:
 
-### 1. Asegúrate de configurar las Variables de Entorno (Variables en el dashboard de Railway).
-
-### 2. Vincula un volumen persistente de tipo Volume montado en la ruta de tu base de datos para evitar pérdida de datos en los reinicios del contenedor.
-
-### 3. Realiza un push directo a tu rama principal:
-
-`git add .
-git commit -m "feat: listo para producción"
-git push origin main`
-
-Railway detectará el cambio y compilará automáticamente usando los recursos óptimos de la nube.
+1. **Environment Variables:** Ensure you duplicate your `.env` structure over into the Railway Dashboard Variables panel.
+2. **Persistent Volumes:** Bind a persistent `Volume` to your deployment container, mounting it to the directory containing your `.sqlite3` file to guarantee data retention across container restarts.
+3. **Deploy via Git:** Push directly to your production tracking branch:
+```bash
+git add .
+git commit -m "feat: infrastructure ready for production"
+git push origin main
+```
+Railway will automatically detect the webhook event, pull down the changes, trigger the custom build instructions, and optimize resources on the fly.
 
 
